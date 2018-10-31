@@ -137,7 +137,7 @@ int main(int *argc, char *argv[])
 							sprintf_s (buffer_out, sizeof(buffer_out), "%s %s%s",PW,input,CRLF);
 						break;
 					case S_DATA:
-						/*printf("CLIENTE> Introduzca datos (enter o QUIT para salir): ");
+						printf("CLIENTE> Introduzca datos (enter o QUIT para salir): ");
 						gets_s(input, sizeof(input));
 						if(strlen(input)==0){ //Si la cadena esta vacia  se finaliza la conexion
 							sprintf_s (buffer_out, sizeof(buffer_out), "%s%s",SD,CRLF);
@@ -145,19 +145,8 @@ int main(int *argc, char *argv[])
 						}
 						else
 							
-							sprintf_s (buffer_out, sizeof(buffer_out), "%s %s%s",ECHO,input,CRLF);*/
-						//Cliente SUMA
-						printf("CLIENTE> Introduzca SUM NUM1 NUM2 para realizar la suma (enter o QUIT para salir): ");
-						fflush(stdin); fflush(stdout);//Limpieza de buffer
-						gets_s(input, sizeof(input));
-						if (strlen(input) == 0) { //Si la cadena esta vacia  se finaliza la conexion
-							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", SD, CRLF);
-							estado = S_QUIT;
-						}
-						else
-
-							sprintf_s(buffer_out, sizeof(buffer_out), "%s %s%s", SUM, input, CRLF);
-						//No funciona siempre da comando erroneo
+							sprintf_s (buffer_out, sizeof(buffer_out), "%s %s%s",ECHO,input,CRLF);
+						
 							break;
 				
 					}
