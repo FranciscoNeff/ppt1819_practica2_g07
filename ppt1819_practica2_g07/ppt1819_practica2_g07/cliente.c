@@ -35,7 +35,7 @@ int main(int *argc, char *argv[])
 	char ipdest[256];
 	char default_ip4[16]="127.0.0.1"; //IP4 Direccion Loopback 
 	char default_ip6[64]="::1"; //IP6 Direccion Loopback 
-
+	char comando[4];
 	WORD wVersionRequested;
 	WSADATA wsaData;
 	int err;
@@ -102,18 +102,42 @@ int main(int *argc, char *argv[])
 				address_size = sizeof(server_in6);
 			}
 
-			estado=S_HELO;
+			estado=S_WELC;
 
 			if(connect(sockfd, server_in, address_size)==0){  //SOSCKET (connect)Establece/Inicia la conexion
 				printf("CLIENTE> CONEXION ESTABLECIDA CON %s:%d\r\n",ipdest,TCP_SERVICE_PORT);
 			
 				//Inicio de la máquina de estados
 				do{
-					switch(estado){
-					case S_HELO:
-						// Se recibe el mensaje de bienvenida
+					switch (estado) {
+					case S_WELC:
+						//RECIBIR mensaje welcome de argsoft
+						estado = S_HELO;
 						break;
-					case S_USER:
+					case S_HELO://como al final esto es una conexion fija lo cambiamos a predefinida
+						printf("CLIENTE> ");//ademas la entrada se queda to bonica
+						sprintf_s(buffer_out, sizeof(buffer_out), "%s%s%s", HELO,ipdest, CRLF);
+						estado = S_MAILFROM;
+						/*gets_s(input, sizeof(input));//basura
+						if (strlen(input) == 0) {
+							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", HELO, CRLF);
+							estado = S_QUIT;
+						}
+						else {
+							for (int i = 0; i < 5; i++) {
+								comando[i] = input[i];
+							}
+							printf("%s", comando);
+							if (strcmp(comando, HELO) == 0) {
+								sprintf_s(buffer_out, sizeof(buffer_out), "%s %s%s", SC, input, CRLF);
+								estado = S_MAILFROM;
+							}
+							else { printf("Comando incorrecto");
+							estado =S_HELO;
+							}
+						}*/
+						break;
+					case S_MAILFROM:
 						// establece la conexion de aplicacion 
 						printf("CLIENTE> Introduzca el usuario (enter para salir): ");
 						gets_s(input,sizeof(input));
@@ -124,6 +148,7 @@ int main(int *argc, char *argv[])
 						else
 							//se verifica el usuario
 						sprintf_s (buffer_out, sizeof(buffer_out), "%s %s%s",SC,input,CRLF);
+						estado = S_PASS;
 						break;
 					case S_PASS:
 						printf("CLIENTE> Introduzca la clave (enter para salir): ");

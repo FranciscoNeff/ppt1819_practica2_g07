@@ -10,6 +10,7 @@
 #define SD2 "EXIT"  // Finalizacion de la conexion de aplicacion 
 #define ECHO "ECHO" // Definicion del comando "ECHO" para el servicio de eco
 //#define SUM "SUM"   // Definicion del comando "SUM" para sumar
+#define HELO "helo"
 
 // RESPUESTAS A COMANDOS DE APLICACION
 #define OK  "OK"
@@ -19,16 +20,16 @@
 #define CRLF "\r\n"
 
 //ESTADOS
-#define S_HELO 0
-#define S_USER 1
-#define S_PASS 2
-//#define S_DATA 3
-#define S_HELO 3
-#define S_QUIT 4
-#define S_EXIT 5
+#define S_WELC 0
+#define S_HELO 1
+#define S_MAILFROM 2
+#define S_PASS 3
+#define S_DATA 4
+#define S_QUIT 5
+#define S_EXIT 6
 
 //PUERTO DEL SERVICIO
-#define TCP_SERVICE_PORT	6000
+#define TCP_SERVICE_PORT	25 //Es el puerto fijo que utilizamos para esta practica
 
 // NOMBRE Y PASSWORD AUTORIZADOS
 #define USER		"alumno"
