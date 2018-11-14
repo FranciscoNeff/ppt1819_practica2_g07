@@ -35,7 +35,7 @@ int main(int *argc, char *argv[])
 	char ipdest[256];
 	char default_ip4[16]="127.0.0.1"; //IP4 Direccion Loopback 
 	char default_ip6[64]="::1"; //IP6 Direccion Loopback 
-	char comando[4];
+	char comando[4] , subject[45] , line[50], data[2048];
 	WORD wVersionRequested;
 	WSADATA wsaData;
 	int err;
@@ -115,7 +115,7 @@ int main(int *argc, char *argv[])
 						estado = S_HELO;
 						break;
 					case S_HELO://como al final esto es una conexion fija lo cambiamos a predefinida
-						printf("CLIENTE> ");//ademas la entrada se queda to bonica
+						printf("CLIENTE> ");//Mejora de visualización
 						sprintf_s(buffer_out, sizeof(buffer_out), "%s%s%s", HELO,ipdest, CRLF);
 						estado = S_MAILFROM;
 						/*gets_s(input, sizeof(input));//basura
@@ -135,43 +135,55 @@ int main(int *argc, char *argv[])
 							else { printf("Comando incorrecto");
 							estado =S_HELO;
 							}
-						}*/
+						}*///este codigo sobra
 						break;
 					case S_MAILFROM:
-						// establece la conexion de aplicacion 
-						printf("CLIENTE> Introduzca el usuario (enter para salir): ");
+						// establece la conexion para escribir el remitente del mensaje
+						printf("CLIENTE> Introduzca el remitente (enter para salir): ");
 						gets_s(input,sizeof(input));
 						if(strlen(input)==0){ //Si la cadena esta vacia  se finaliza la conexion
 							sprintf_s (buffer_out, sizeof(buffer_out), "%s%s",SD,CRLF);
 							estado=S_QUIT;
 						}
 						else
-							//se verifica el usuario
-						sprintf_s (buffer_out, sizeof(buffer_out), "%s %s%s",SC,input,CRLF);
-						estado = S_PASS;
+							//se marca el remitente
+						sprintf_s (buffer_out, sizeof(buffer_out), "%s %s%s",MF,input,CRLF);
+						estado = S_RCPT;
 						break;
-					case S_PASS:
-						printf("CLIENTE> Introduzca la clave (enter para salir): ");
+					case S_RCPT: //hacer un bucle para mandar mas de un destinatario
+						printf("CLIENTE> Introduzca el destinatario (enter para salir): ");
 						gets_s(input, sizeof(input));
 						if(strlen(input)==0){ //Si la cadena esta vacia  se finaliza la conexion
 							sprintf_s (buffer_out, sizeof(buffer_out), "%s%s",SD,CRLF);
 							estado=S_QUIT;
 						}
 						else
-							//se verifica el pass
-							sprintf_s (buffer_out, sizeof(buffer_out), "%s %s%s",PW,input,CRLF);
+							//se marca el destinatario
+							sprintf_s (buffer_out, sizeof(buffer_out), "%s %s%s",RT,input,CRLF);
+						estado = S_DATA;
 						break;
 					case S_DATA:
-						printf("CLIENTE> Introduzca datos (enter o QUIT para salir): ");
-						gets_s(input, sizeof(input));
-						if(strlen(input)==0){ //Si la cadena esta vacia  se finaliza la conexion
-							sprintf_s (buffer_out, sizeof(buffer_out), "%s%s",SD,CRLF);
-							estado=S_QUIT;
+						printf("CLIENTE> Introduzca el asunto (enter o QUIT para salir): ");
+						gets(subject);
+						if (strlen(subject) == 0) {
+							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", RS, CRLF);
+							estado = S_MAILFROM;
 						}
-						else
-							
-							sprintf_s (buffer_out, sizeof(buffer_out), "%s %s%s",ECHO,input,CRLF);
-						
+						else{
+							strcat(data,"subject:", subject,CRLF);
+							strcat(data, subject);
+							printf("CLIENTE> Introduzca el e-mail (enter o RESET para salir): ");//mejor con reset
+						do {
+							gets(line);
+							if (strlen(line) == RS) { //Si la cadena es un RESET volvemos al MAILFROM
+								sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", RS, CRLF);
+								estado = S_MAILFROM;//comprobar
+							}
+							else {
+								strcat(data,line);
+							}
+						} while (strcmp(line, F_DATA) != 0);
+					}
 							break;
 				
 					}
