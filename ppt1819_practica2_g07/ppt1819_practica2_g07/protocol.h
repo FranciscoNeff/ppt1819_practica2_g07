@@ -21,6 +21,7 @@
 #define OK "2"
 #define ER  "ER"
 #define UNK_COMAND  "502"
+#define USR_UNK "554"
 
 //FIN DE RESPUESTA
 #define CRLF "\r\n"
