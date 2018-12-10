@@ -9,10 +9,10 @@
 #define SD  "QUIT"  // Finalizacion de la conexion de aplicacion
 #define SD2 "EXIT"  // Finalizacion de la conexion de aplicacion 
 #define ECHO "ECHO" // Definicion del comando "ECHO" para el servicio de eco
-//#define SUM "SUM"   // Definicion del comando "SUM" para sumar
-#define HELO "helo"
+#define HELO "HELO"
 #define MF "MAIL FROM:"
 #define RT "RCPT TO:"
+#define AS "SUBJECT:"
 #define F_DATA ".\r\n"
 // RESPUESTAS A COMANDOS DE APLICACION
 #define OK  "OK"

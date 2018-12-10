@@ -29,11 +29,11 @@ int main(int *argc, char *argv[])
 	int address_size = sizeof(server_in4);
 	char buffer_in[1024], buffer_out[1024],input[1024];
 	int recibidos=0,enviados=0;
-	int estado=S_HELO;
+	int estado;
 	char option;
 	int ipversion=AF_INET;//IPv4 por defecto
 	char ipdest[256];
-	char default_ip4[16]="127.0.0.1"; //IP4 Direccion Loopback 
+	char default_ip4[16]="192.168.0.12"; //IP4 Direccion Loopback 
 	char default_ip6[64]="::1"; //IP6 Direccion Loopback 
 	char comando[4] , subject[45] , line[2048], data[2048];
 	WORD wVersionRequested;
@@ -52,7 +52,7 @@ int main(int *argc, char *argv[])
 	}
 	//Fin: Inicialización Windows sockets
 	
-	printf("**************\r\nCLIENTE TCP SENCILLO SOBRE IPv4 o IPv6\r\n*************\r\n");
+	printf("**************\r\nCLIENTE SERVIDOR DE CORREO \r\n*************\r\n");
 	
 
 	do {
@@ -74,7 +74,7 @@ int main(int *argc, char *argv[])
 			exit(-1);
 		}
 		else {
-			printf("CLIENTE> Introduzca la IP destino (pulsar enter para IP por defecto): ");
+			printf("CLIENTE> Introduzca la IP del dominio (pulsar enter para IP por defecto): ");
 			gets_s(ipdest, sizeof(ipdest));
 
 			//Dirección por defecto según la familia
@@ -112,32 +112,16 @@ int main(int *argc, char *argv[])
 					switch (estado) {
 					case S_WELC:
 						//RECIBIR mensaje welcome de argsoft
-						
-						estado = S_HELO;
+						if (strncmp(buffer_in, OK, 1) == 0) {
+							printf("CLIENTE> CONEXION ESTABLECIDA CON %s:%d\r\n", ipdest, TCP_SERVICE_PORT);
+							estado = S_HELO;
+						}
 						break;
 					case S_HELO://como al final esto es una conexion fija lo cambiamos a predefinida
 						printf("CLIENTE> ");//Mejora de visualización
 						sprintf_s(buffer_out, sizeof(buffer_out), "%s%s%s", HELO, ipdest, CRLF);
 						estado = S_MAILFROM;
-						/*gets_s(input, sizeof(input));//basura
-						if (strlen(input) == 0) {
-							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", HELO, CRLF);
-							estado = S_QUIT;
-						}
-						else {
-							for (int i = 0; i < 5; i++) {
-								comando[i] = input[i];
-							}
-							printf("%s", comando);
-							if (strcmp(comando, HELO) == 0) {
-								sprintf_s(buffer_out, sizeof(buffer_out), "%s %s%s", SC, input, CRLF);
-								estado = S_MAILFROM;
-							}
-							else { printf("Comando incorrecto");
-							estado =S_HELO;
-							}
-						}*///este codigo sobra
-						break;
+						
 					case S_MAILFROM:
 						// establece la conexion para escribir el remitente del mensaje
 						printf("CLIENTE> Introduzca el remitente (enter para salir): ");
@@ -145,13 +129,14 @@ int main(int *argc, char *argv[])
 						if (strlen(input) == 0) { //Si la cadena esta vacia  se finaliza la conexion
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", SD, CRLF);
 							estado = S_QUIT;
+					
 						}
 						else
 							//se marca el remitente
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s %s%s", MF, input, CRLF);
-						strcat(data, MF);
-						strcat(data, input);
-						strcat(data, CRLF);
+						
+						//strcat(MF, input,CRLF);
+						
 						estado = S_RCPT;
 						break;
 					case S_RCPT: //hacer un bucle para mandar mas de un destinatario
@@ -164,34 +149,35 @@ int main(int *argc, char *argv[])
 						else
 							//se marca el destinatario
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s %s%s", RT, input, CRLF);
-						strcat(data, RT);
-						strcat(data, input);
-						strcat(data, CRLF);
+					
+						//strcat(RT, input,CRLF);
+						
 						estado = S_DATA;
 						break;
 					case S_DATA:
 						printf("CLIENTE> Introduzca el asunto (RESET para salir): ");
-						gets_s(subject,sizeof(subject));
-						if (strcmp(subject,RS) == 0) {
+						gets_s(subject, sizeof(subject));
+						if (strcmp(subject, RS) == 0) {
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", RS, CRLF);
 							estado = S_MAILFROM;
 						}
 						else {
-							strcat(data, "subject:");
-							strcat(data, subject);
+							//strcat(AS, subject,CRLF);
+							//strcat(data, "subject:");
+							//strcat(data, subject);
 							strcat(data, CRLF);//para añadir el asunto
 							printf("CLIENTE> Introduzca el e-mail ( RESET para salir): ");//mejor con reset
 							gets_s(line, sizeof(line));
-							if (strcmp(line,RS) == 0) { //Si la cadena es un RESET volvemos al MAILFROM
+							if (strcmp(line, RS) == 0) { //Si la cadena es un RESET volvemos al MAILFROM
 								sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", RS, CRLF);
 								estado = S_MAILFROM;//comprobar
 								continue;
-								
+
 							}
 							else {//si no empezamos a leer el mensaje 
 								strcat(data, line);
 								do {
-									gets_s(line,sizeof(line));
+									gets_s(line, sizeof(line));
 									strcat(data, line);
 								} while (strcmp(line, F_DATA) != 0);//mil caracecteres maximo
 							}
@@ -214,7 +200,7 @@ int main(int *argc, char *argv[])
 
 							}
 							//Si todo es correcto envio los datos
-							if (estado != S_HELO) {
+							if (estado != S_WELC) {
 								enviados = send(sockfd, buffer_out, (int)strlen(buffer_out), 0); //SOCKET (send)Envia el mensaje
 								//Se comprueba si hay error
 								if (enviados == SOCKET_ERROR) {
@@ -241,15 +227,15 @@ int main(int *argc, char *argv[])
 								//Se muestra el mensaje
 								buffer_in[recibidos] = 0x00;
 								printf(buffer_in);
-								if (estado != S_DATA && strncmp(buffer_in, OK, 2) == 0)
-									estado++;
+								//if (estado != S_DATA && strncmp(buffer_in, OK, 2) == 0)
+
+							}
 							}
 						}
-					}
-						}while (estado != S_QUIT);
-					
-				
-			}
+					}while (estado != S_QUIT);
+				}
+
+			
 			else {
 				int error_code = GetLastError();
 				printf("CLIENTE> ERROR AL CONECTAR CON %s:%d\r\n", ipdest, TCP_SERVICE_PORT);
