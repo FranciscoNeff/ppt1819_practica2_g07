@@ -14,9 +14,13 @@
 #define RT "RCPT TO:"
 #define AS "SUBJECT:"
 #define F_DATA ".\r\n"
+
+
 // RESPUESTAS A COMANDOS DE APLICACION
-#define OK  "OK"
+
+#define OK "2"
 #define ER  "ER"
+#define UNK_COMAND  "502"
 
 //FIN DE RESPUESTA
 #define CRLF "\r\n"
@@ -27,8 +31,10 @@
 #define S_MAILFROM 2
 #define S_RCPT 3
 #define S_DATA 4
+#define S_MAIL 5
 #define S_QUIT 5
 #define S_EXIT 6
+#define S_RESET 8
 
 //PUERTO DEL SERVICIO
 #define TCP_SERVICE_PORT	25 //Es el puerto fijo que utilizamos para esta practica
