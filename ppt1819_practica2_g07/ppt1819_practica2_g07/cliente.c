@@ -163,6 +163,7 @@ int main(int *argc, char *argv[])
 							strcat_s(data, sizeof(data), "to ");
 							strcat_s(data, sizeof(data), input, sizeof(input));
 							strcat_s(data, sizeof(data), CRLF);//cabecera from en el data
+							//va uno a uno
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s %s%s", RT, input, CRLF);
 						}
 
@@ -195,11 +196,13 @@ int main(int *argc, char *argv[])
 							strcat(data, line);
 							do {
 								gets_s(line, sizeof(line));
-								strcat(data, line);
-							} while (strcmp(line, ".") != 0 || strlen(line) < 999);//mil caracecteres maximo
+								strcat_s(data,sizeof(data), line,sizeof(line));
+							} while (strcmp(line, ".") != 0 && strlen(data) < 999);//mil caracecteres maximo
+							strcat_s(data, sizeof(data), F_MENS);
+							
 						}
 						if(strcmp(line, "RESET") != 0){
-							printf("CLIENTE> ¿Los datos introducidos son correctos? ( RESET para salir): ");
+							printf("CLIENTE> ¿Si los datos introducidos son correctos pulse cualquier tecla para continuar? ( RESET para salir): ");
 						gets_s(line, sizeof(line));
 						if (strcmp(line, "RESET") == 0) {
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", RS, CRLF);
@@ -207,7 +210,8 @@ int main(int *argc, char *argv[])
 						}
 						else {
 							strcat(buffer_out, data);
-							enviados = send(sockfd, buffer_out, (int)strlen(buffer_out), 0); //SOCKET (send)Envia el mensaje
+							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s%s", MAIL, CRLF, data );
+							//enviados = send(sockfd, buffer_out, (int)strlen(buffer_out), 0); //SOCKET (send)Envia el mensaje
 						}
 					}
 						break;
@@ -259,7 +263,6 @@ int main(int *argc, char *argv[])
 						}
 						break;
 					case S_HELO:
-						buffer_in[recibidos] = 0x00;
 						if (strncmp(buffer_in, OK, 1) == 0) {
 							printf(buffer_in);
 							estado = S_MAILFROM;
@@ -291,7 +294,12 @@ int main(int *argc, char *argv[])
 					case S_RCPT:
 						if (strncmp(buffer_in, OK, 1) == 0) {
 							printf(buffer_in);
-							estado = S_DATA;
+							printf("Desea introducir otro destinatario mas, cualquier tecla para continuar?(Enter para salir)");
+								gets_s(input, sizeof(input));
+								if (strlen(input) == 0) { estado = S_DATA; }
+								else {
+									estado = S_RCPT;
+								}
 						}
 						else {
 							printf("---------Error en la rececpcion de datos----------\r\n");
@@ -301,6 +309,25 @@ int main(int *argc, char *argv[])
 					case S_DATA:
 						estado = S_MAIL;
 						break;
+					case S_MAIL:
+						if (strncmp(buffer_in, OK, 1) == 0) {
+							printf(buffer_in);
+							printf("CLIENTE> Desea redactar otro correo, cualquier tecla para continuar? (enter para salir)");
+							gets_s(input, sizeof(input));
+							if (strlen(input) == 0) { estado = S_QUIT; }
+							else { estado = S_MAILFROM; }
+
+						}
+						else if (strncmp(buffer_in, UNK_COMAND, 3) == 0) {
+							estado = S_HELO;
+							printf("--------------Comando incorrecto---------------\r\n");
+						}
+						else {
+							printf("---------Error en la rececpcion de datos----------\r\n");
+							estado = S_QUIT;
+						}
+						break;
+
 
 
 

@@ -14,8 +14,8 @@
 #define RT "RCPT TO:"
 #define AS "SUBJECT:"
 #define F_DATA ".\r\n"
-#define VRFY "VRFY"
-
+#define VRFY "VRFY "
+#define MAIL "DATA "
 // RESPUESTAS A COMANDOS DE APLICACION
 
 #define OK "2"
@@ -24,6 +24,7 @@
 
 //FIN DE RESPUESTA
 #define CRLF "\r\n"
+#define F_MENS "\r\n.\r\n"
 
 //ESTADOS
 #define S_WELC 0
