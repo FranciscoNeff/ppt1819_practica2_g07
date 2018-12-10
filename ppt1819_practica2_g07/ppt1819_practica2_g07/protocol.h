@@ -5,7 +5,7 @@
 // COMANDOS DE APLICACION
 #define SC "USER"  // SOLICITUD DE CONEXION USER usuario 
 #define PW "PASS"  // Password del usuario  PASS password
-#define RS "RESET"
+#define RS "RSET"
 #define SD  "QUIT"  // Finalizacion de la conexion de aplicacion
 #define SD2 "EXIT"  // Finalizacion de la conexion de aplicacion 
 #define ECHO "ECHO" // Definicion del comando "ECHO" para el servicio de eco
@@ -14,7 +14,7 @@
 #define RT "RCPT TO:"
 #define AS "SUBJECT:"
 #define F_DATA ".\r\n"
-
+#define VRFY "VRFY"
 
 // RESPUESTAS A COMANDOS DE APLICACION
 
@@ -32,9 +32,9 @@
 #define S_RCPT 3
 #define S_DATA 4
 #define S_MAIL 5
-#define S_QUIT 5
 #define S_EXIT 6
 #define S_RESET 8
+#define S_QUIT 9
 
 //PUERTO DEL SERVICIO
 #define TCP_SERVICE_PORT	25 //Es el puerto fijo que utilizamos para esta practica

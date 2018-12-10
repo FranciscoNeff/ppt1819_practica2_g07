@@ -35,16 +35,13 @@ int main(int *argc, char *argv[])
 	char ipdest[256];
 	char default_ip4[16]="192.168.0.12"; //IP4 Direccion Loopback 
 	char default_ip6[64]="::1"; //IP6 Direccion Loopback 
-	char comando[4] ,  line[2048], data[2048];
+	char comando[4], line[2048], data[2048] = { NULL };
 	WORD wVersionRequested;
 	WSADATA wsaData;
 	int err;
 	//manenjo de cabeceras
 	char date[10], subject[100], to[45], from[45];
-	strcat(date, "date:");
-	strcat(subject, "subject:");
-	strcat(to, "to:");
-	strcat(from, "from:");
+	
 
 	//Inicialización Windows sockets - SOLO WINDOWS
 	wVersionRequested=MAKEWORD(1,1);
@@ -136,7 +133,7 @@ int main(int *argc, char *argv[])
 						break;
 					case S_MAILFROM:
 						// establece la conexion para escribir el remitente del mensaje
-						//problema no verifica el user
+						//problema no verifica el user ahi que añadir VRFY
 						printf("CLIENTE> Introduzca el remitente (enter para salir): ");
 						gets_s(input, sizeof(input));
 						if (strlen(input) == 0) { //Si la cadena esta vacia  se finaliza la conexion
@@ -145,14 +142,17 @@ int main(int *argc, char *argv[])
 
 						}
 						else {
-						//se marca el remitente
-						strcat(from, input);//cabecera from
-						sprintf_s(buffer_out, sizeof(buffer_out), "%s %s%s", MF, input, CRLF);
-					}
-						
+							strcat_s(data, sizeof(data), "from ");
+							strcat_s(data, sizeof(data), input, sizeof(input));
+							strcat_s(data, sizeof(data), CRLF);//cabecera from en el data
+							sprintf_s(buffer_out, sizeof(buffer_out), "%s %s%s", MF, input, CRLF);//no reconoce VRFY preguntar
+						}
+
 						break;
 					case S_RCPT: //hacer un bucle para mandar mas de un destinatario
+
 						printf("CLIENTE> Introduzca el destinatario (enter para salir): ");
+
 						gets_s(input, sizeof(input));
 						if (strlen(input) == 0) { //Si la cadena esta vacia  se finaliza la conexion
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", SD, CRLF);
@@ -160,23 +160,26 @@ int main(int *argc, char *argv[])
 						}
 						else {
 							//se marca el destinatario
-							strcat(to, input);//cabecera to
+							strcat_s(data, sizeof(data), "to ");
+							strcat_s(data, sizeof(data), input, sizeof(input));
+							strcat_s(data, sizeof(data), CRLF);//cabecera from en el data
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s %s%s", RT, input, CRLF);
 						}
-						
 
 						break;
 					case S_DATA:
-						
+
 						//zona subject
 						printf("CLIENTE> Introduzca el asunto (RESET para salir): ");
 						gets_s(input, sizeof(input));
-						if (strcmp(input, RS) == 0) {
+						if (strcmp(input, "RESET") == 0) {
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", RS, CRLF);
 							estado = S_QUIT;
 						}
 						else {
-							strcat(subject, input);//cabecera subject
+							strcat_s(data, sizeof(data), "subject ");
+							strcat_s(data, sizeof(data), input, sizeof(input));
+							strcat_s(data, sizeof(data), CRLF);//cabecera from en el data
 							//sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", data, CRLF);
 						}
 						//TODO falta la fecha de modo manual
@@ -184,7 +187,7 @@ int main(int *argc, char *argv[])
 					case S_MAIL:
 						printf("CLIENTE> Escriba el correo (utilice '.' y enter para enviar)( RESET para salir): ");
 						gets_s(line, sizeof(line));
-						if (strcmp(line, RS) == 0) {
+						if (strcmp(line, "RESET") == 0) {
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", RS, CRLF);
 							estado = S_QUIT;
 						}
@@ -193,11 +196,12 @@ int main(int *argc, char *argv[])
 							do {
 								gets_s(line, sizeof(line));
 								strcat(data, line);
-							} while (strcmp(line, ".") != 0 || strlen(line)>999);//mil caracecteres maximo
+							} while (strcmp(line, ".") != 0 || strlen(line) < 999);//mil caracecteres maximo
 						}
-						printf("CLIENTE> ¿Los datos introducidos son correctos? ( RESET para salir): ");//mejor con reset
+						if(strcmp(line, "RESET") != 0){
+							printf("CLIENTE> ¿Los datos introducidos son correctos? ( RESET para salir): ");
 						gets_s(line, sizeof(line));
-						if (strcmp(line, RS) == 0) { //Si la cadena es un RESET volvemos al MAILFROM
+						if (strcmp(line, "RESET") == 0) {
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", RS, CRLF);
 							estado = S_QUIT;//comprobar
 						}
@@ -205,98 +209,106 @@ int main(int *argc, char *argv[])
 							strcat(buffer_out, data);
 							enviados = send(sockfd, buffer_out, (int)strlen(buffer_out), 0); //SOCKET (send)Envia el mensaje
 						}
+					}
 						break;
 					}
-								
 
-							
-							//Si todo es correcto envio los datos
-							if (estado != S_WELC ) {
-								enviados = send(sockfd, buffer_out, (int)strlen(buffer_out), 0); //SOCKET (send)Envia el mensaje
-								//Se comprueba si hay error
-								if (enviados == SOCKET_ERROR) {
-									estado = S_QUIT;
-									continue;
-								}
-							}
-							if (estado != S_MAIL && estado!=S_DATA){
-							recibidos = recv(sockfd, buffer_in, 512, 0); //SOCKET (recv)Recibe el mensaje
-							if (recibidos <= 0) {
-								DWORD error = GetLastError();
-								if (recibidos < 0) {
-									//Error al recibir se finaliza la conexion
-									printf("CLIENTE> Error %d en la recepción de datos\r\n", error);
-									estado = S_QUIT;
-								}
-								else {
-									//Conexion cerrada de forma manual
-									printf("CLIENTE> Conexión con el servidor cerrada\r\n");
-									estado = S_QUIT;
-								}
+
+
+					//Si todo es correcto envio los datos
+					if (estado != S_WELC && estado != S_DATA) {
+						enviados = send(sockfd, buffer_out, (int)strlen(buffer_out), 0); //SOCKET (send)Envia el mensaje
+						//Se comprueba si hay error
+						if (enviados == SOCKET_ERROR) {
+							estado = S_QUIT;
+							continue;
+						}
+					}
+					if (estado != S_MAIL && estado != S_DATA) {
+						recibidos = recv(sockfd, buffer_in, 512, 0); //SOCKET (recv)Recibe el mensaje
+						if (recibidos <= 0) {
+							DWORD error = GetLastError();
+							if (recibidos < 0) {
+								//Error al recibir se finaliza la conexion
+								printf("CLIENTE> Error %d en la recepción de datos\r\n", error);
+								estado = S_QUIT;
 							}
 							else {
-								//Se muestra el mensaje
-								buffer_in[recibidos] = 0x00;
-								
-
-								//Maquina de estados
-
-								switch (estado) {
-								case S_WELC:
-									if (strncmp(buffer_in, OK, 1) == 0) {
-										printf(buffer_in);
-										estado = S_HELO; }
-									else {
-										printf("---------Error en la rececpcion de datos----------\r\n");
-										estado = S_QUIT;
-									}
-									break;
-								case S_HELO:
-									buffer_in[recibidos] = 0x00;
-									if (strncmp(buffer_in, OK, 1) == 0) {
-										printf(buffer_in);
-										estado=S_MAILFROM;
-
-									}
-									else if (strncmp(buffer_in, UNK_COMAND, 3) == 0) {
-										estado = S_HELO;
-										printf("--------------Comando incorrecto---------------\r\n");
-									}
-									else {
-										printf("---------Error en la rececpcion de datos----------\r\n");
-							estado = S_QUIT;
-									}
-									break;
-								case S_MAILFROM:
-									if (strncmp(buffer_in, OK, 1) == 0) {
-										printf(buffer_in);
-										estado = S_RCPT;
-									}
-									else {
-										printf("---------Error en la rececpcion de datos----------\r\n");
-										estado = S_QUIT;
-									}
-									break;
-								case S_RCPT:
-									if (strncmp(buffer_in, OK, 1) == 0) {
-										printf(buffer_in);
-										estado = S_DATA;
-									}
-									else {
-										printf("---------Error en la rececpcion de datos----------\r\n");
-										estado = S_QUIT;
-									}
-									break;
-								case S_DATA:
-									estado = S_MAIL;
-									break;
-								}
-
+								//Conexion cerrada de forma manual
+								printf("CLIENTE> Conexión con el servidor cerrada\r\n");
+								estado = S_QUIT;
 							}
-						
-						
-						
 						}
+						else {
+							//Se muestra el mensaje
+							buffer_in[recibidos] = 0x00;
+						}
+					}
+
+					//Maquina de estados
+
+					switch (estado) {
+					case S_WELC:
+						if (strncmp(buffer_in, OK, 1) == 0) {
+							printf(buffer_in);
+							estado = S_HELO;
+						}
+						else {
+							printf("---------Error en la rececpcion de datos----------\r\n");
+							estado = S_QUIT;
+						}
+						break;
+					case S_HELO:
+						buffer_in[recibidos] = 0x00;
+						if (strncmp(buffer_in, OK, 1) == 0) {
+							printf(buffer_in);
+							estado = S_MAILFROM;
+
+						}
+						else if (strncmp(buffer_in, UNK_COMAND, 3) == 0) {
+							estado = S_HELO;
+							printf("--------------Comando incorrecto---------------\r\n");
+						}
+						else {
+							printf("---------Error en la rececpcion de datos----------\r\n");
+							estado = S_QUIT;
+						}
+						break;
+					case S_MAILFROM:
+						if (strncmp(buffer_in, OK, 1) == 0) {
+							printf(buffer_in);
+							estado = S_RCPT;
+						}
+						else if (strncmp(buffer_in, UNK_COMAND, 3) == 0) {
+							estado = S_HELO;
+							printf("--------------Usuario Incorrecto---------------\r\n");
+						}
+						else {
+							printf("---------Error en la rececpcion de datos----------\r\n");
+							estado = S_QUIT;
+						}
+						break;
+					case S_RCPT:
+						if (strncmp(buffer_in, OK, 1) == 0) {
+							printf(buffer_in);
+							estado = S_DATA;
+						}
+						else {
+							printf("---------Error en la rececpcion de datos----------\r\n");
+							estado = S_QUIT;
+						}
+						break;
+					case S_DATA:
+						estado = S_MAIL;
+						break;
+
+
+
+
+
+
+					}
+				
 					}while (estado != S_QUIT);
 				}
 
