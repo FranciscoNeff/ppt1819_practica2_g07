@@ -35,7 +35,8 @@
 #define S_DATA 4
 #define S_MAIL 5
 #define S_EXIT 6
-#define S_RESET 8
+#define S_RESPONSE 7
+#define S_RSET 8
 #define S_QUIT 9
 
 //PUERTO DEL SERVICIO
