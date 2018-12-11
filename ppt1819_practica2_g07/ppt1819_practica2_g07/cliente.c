@@ -291,6 +291,8 @@ int main(int *argc, char *argv[])
 						}
 						break;
 					case S_MAILFROM:
+						//buffer_in[recibidos] = 0x00;
+						//printf("%s", &buffer_in);
 						if (strncmp(buffer_in, OK, 1) == 0) {
 							printf("MAIL FROM: %s\n",&input,sizeof(input));
 							estado = S_RCPT;
@@ -329,7 +331,14 @@ int main(int *argc, char *argv[])
 							printf("CLIENTE> Desea redactar otro correo, cualquier tecla para continuar? (enter para salir)");
 							gets_s(input, sizeof(input));
 							if (strlen(input) == 0) { estado = S_QUIT; }
-							else { estado = S_MAILFROM; }
+							else { estado = S_MAILFROM;
+							/*buffer_in[recibidos] = 0x00;
+							printf("%s", &buffer_in);
+							buffer_in[recibidos] = 0x00;
+							buffer_in[recibidos] = 0x00;
+							printf("%s", &buffer_in);*/
+							//sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", HELO, CRLF);
+							}
 
 						}
 						else if (strncmp(buffer_in, UNK_COMAND, 3) == 0) {
