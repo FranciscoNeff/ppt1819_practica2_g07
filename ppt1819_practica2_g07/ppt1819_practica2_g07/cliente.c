@@ -26,6 +26,8 @@ int main(int *argc, char *argv[])
 	struct sockaddr *server_in=NULL;
 	struct sockaddr_in server_in4;
 	struct sockaddr_in6 server_in6;
+	struct tm *tm;//ayuda fecha //https://poesiabinaria.net/2012/06/obtener-la-fecha-y-hora-formateada-en-c/
+	char fecha[12];
 	int address_size = sizeof(server_in4);
 	char buffer_in[1024], buffer_out[1024],input[1024];
 	int recibidos=0,enviados=0;
@@ -33,9 +35,10 @@ int main(int *argc, char *argv[])
 	char option;
 	int ipversion=AF_INET;//IPv4 por defecto
 	char ipdest[256];
-	char default_ip4[16]="192.168.0.12"; //IP4 Direccion Loopback 
+	char default_ip4[16]="127.0.0.1"; //IP4 Direccion Loopback 
 	char default_ip6[64]="::1"; //IP6 Direccion Loopback 
 	char comando[4], line[2048], data[2048] = { NULL };
+	char mail[2000] = {NULL};
 	WORD wVersionRequested;
 	WSADATA wsaData;
 	int err;
@@ -211,6 +214,14 @@ int main(int *argc, char *argv[])
 							estado = S_QUIT;//comprobar
 						}
 						else {
+							//zona date
+					/*	time_t	t = time(NULL);
+						tm = localtime(&t);
+						strftime(fecha, 10, "%d/%m/%Y", tm);//fomato DD-MM-YYYY
+						strcat_s(mail, 5, "date ");
+						strcat_s(mail, sizeof(mail), fecha,sizeof(fecha));
+						strcat_s(mail, sizeof(mail), CRLF);
+						strcat_s(mail, sizeof(mail), data, sizeof(data));*/
 							strcat(buffer_out, data);
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s%s", MAIL, CRLF, data );
 							//enviados = send(sockfd, buffer_out, (int)strlen(buffer_out), 0); //SOCKET (send)Envia el mensaje
