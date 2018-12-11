@@ -266,6 +266,7 @@ int main(int *argc, char *argv[])
 
 					switch (estado) {
 					case S_WELC:
+						
 						if (strncmp(buffer_in, OK, 1) == 0) {
 							printf(buffer_in);
 							estado = S_HELO;
@@ -291,9 +292,8 @@ int main(int *argc, char *argv[])
 						}
 						break;
 					case S_MAILFROM:
-						//buffer_in[recibidos] = 0x00;
-						//printf("%s", &buffer_in);
-						if (strncmp(buffer_in, OK, 1) == 0) {
+						
+						if (strncmp(buffer_in, OK, 1) == 0 || strncmp(buffer_in, "3", 1) == 0) {
 							printf("MAIL FROM: %s\n",&input,sizeof(input));
 							estado = S_RCPT;
 						}
@@ -332,12 +332,6 @@ int main(int *argc, char *argv[])
 							gets_s(input, sizeof(input));
 							if (strlen(input) == 0) { estado = S_QUIT; }
 							else { estado = S_MAILFROM;
-							/*buffer_in[recibidos] = 0x00;
-							printf("%s", &buffer_in);
-							buffer_in[recibidos] = 0x00;
-							buffer_in[recibidos] = 0x00;
-							printf("%s", &buffer_in);*/
-							//sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", HELO, CRLF);
 							}
 
 						}
