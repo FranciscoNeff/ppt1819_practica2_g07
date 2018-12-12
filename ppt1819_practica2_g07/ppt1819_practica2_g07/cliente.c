@@ -28,7 +28,7 @@ int main(int *argc, char *argv[])
 	struct sockaddr_in server_in4;
 	struct sockaddr_in6 server_in6;
 	struct in_addr address;
-	//struct tm *date;//ayuda fecha //https://poesiabinaria.net/2012/06/obtener-la-fecha-y-hora-formateada-en-c/
+	//ayuda fecha //https://poesiabinaria.net/2012/06/obtener-la-fecha-y-hora-formateada-en-c/
 	//http://www.holamundo.es/lenguaje/c/articulos/fecha-hora-c.html
 	char fecha[64];
 	int address_size = sizeof(server_in4);
@@ -90,7 +90,7 @@ int main(int *argc, char *argv[])
 			//para el dominio aqui
 			struct hostent *host;
 			host = gethostbyname(ipdest);
-			if (host != NULL) {
+			if (host != NULL) {//Resolucion del dominio si es valida se lanza el cliente si no abortamos
 				memcpy(&address, host->h_addr_list[0], 4);
 				strcpy_s(ipdest, sizeof(ipdest), inet_ntoa(address));
 				estado = S_WELC;
