@@ -135,21 +135,20 @@ int main(int *argc, char *argv[])
 						//RECIBIR mensaje welcome de argsoft
 						break;
 					case S_HELO:
-						printf("CLIENTE> Introduzca el comando HELO para continuar (enter para salir):  ");//get hostbyname
+						sprintf_s(buffer_out, sizeof(buffer_out), "%s %s%s", HELO, host, CRLF);
+						printf("CLIENTE> Introduzca el comando Host para continuar (enter para salir):  ");
 						gets_s(input, sizeof(input));
 						if (strlen(input) == 0) {
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", SD, CRLF);
 							estado = S_QUIT;
 						}
 
-						else {
-							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", input, CRLF);
+						else {//mandamos HELO y el host
+							sprintf_s(buffer_out, sizeof(buffer_out), "%s %s%s",HELO, input, CRLF);
 						}
 
 						break;
 					case S_MAILFROM:
-						// establece la conexion para escribir el remitente del mensaje
-
 						printf("CLIENTE> Introduzca el remitente (enter para salir): ");
 						gets_s(input, sizeof(input));
 						if (strlen(input) == 0) { //Si la cadena esta vacia  se finaliza la conexion
@@ -160,7 +159,7 @@ int main(int *argc, char *argv[])
 						else {
 							strcat_s(data, sizeof(data), "From: ");
 							strcat_s(data, sizeof(data), input, sizeof(input));
-							strcat_s(data, sizeof(data), CRLF);//cabecera from en el data
+							strcat_s(data, sizeof(data), CRLF);//cabecera From:  en el data
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s%s", MF, input, CRLF);
 						}
 						break;
@@ -177,8 +176,8 @@ int main(int *argc, char *argv[])
 							//se marca el destinatario
 							strcat_s(data, sizeof(data), "To: ");
 							strcat_s(data, sizeof(data), input, sizeof(input));
-							strcat_s(data, sizeof(data), CRLF);//cabecera to en el data
-							//va uno a uno
+							strcat_s(data, sizeof(data), CRLF);//cabecera To: en el data
+							//como pueden ser mas de un destinatario los va incluyendo uno a nuno
 							sprintf_s(buffer_out, sizeof(buffer_out), "%s %s%s", RT, input, CRLF);
 						}
 
@@ -196,18 +195,18 @@ int main(int *argc, char *argv[])
 							gets_s(input, sizeof(input));
 							strcat_s(data, sizeof(data), "Subject: ");
 							strcat_s(data, sizeof(data), input, sizeof(input));
-							strcat_s(data, sizeof(data), CRLF);//cabecera subject en el data	
+							strcat_s(data, sizeof(data), CRLF);//cabecera Subject: en el data	
 							//zone date
 							time_t t = time(NULL);
 							struct tm *date = localtime(&t);
-							strftime(fecha, sizeof(fecha), "%a, %d %b %Y %H:%M:%S %z", date);//fomato Mon, DD Jun AAAA HH:MM:SS gmt
+							strftime(fecha, sizeof(fecha), "%a, %d %b %Y %H:%M:%S %z", date);
 							//EJEMPLO DE FORMATO PARA EL DATE
 							//Date: Fri, 21 Nov 1997 09:55:06 -0600
 							strcat_s(data, sizeof(data), "Date: ");
 							strcat_s(data, sizeof(data), fecha, sizeof(fecha));
-							strcat_s(data, sizeof(data), CRLF);
-							strcat_s(data, sizeof(data), CRLF);
-							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s%s", MAIL, CRLF, data);
+							strcat_s(data, sizeof(data), CRLF);//cabecera Date: en el data	
+							strcat_s(data, sizeof(data), CRLF);//Doble salto de linea para las cabeceras
+							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s%s", DATA, CRLF, data);
 							printf("CLIENTE> Escriba el correo (utilice '.' y enter para enviar): ");
 						}
 
@@ -216,29 +215,9 @@ int main(int *argc, char *argv[])
 					case S_MAIL:
 						gets_s(line, sizeof(line));
 						sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", line,"\n");
-						//bucle send
-						/*printf("CLIENTE> Escriba el correo (utilice '.' y enter para enviar): ");
-						do {
-							gets_s(line, sizeof(line));
-							strcat_s(mail, sizeof(mail), line);
-						} while (strcmp(line, ".") != 0 && strlen(mail) < 999);//mil caracecteres maximo
-						*///Para correo a taco gordo
-/*
-						printf("CLIENTE> ¿Si los datos introducidos son correctos pulse cualquier tecla para continuar? ( RESET para salir): ");
-						gets_s(line, sizeof(line));
-						if (strcmp(line, "RESET") == 0) {
-							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", RS, CRLF);
-							estado = S_RSET;//comprobar
-						}
-						else {
-							buffer_out[0] = "\0";
-							sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", mail, F_MENS);
-						}*/
-
 						break;
 
 					}//HAY mi madre el bicho del corchete
-
 
 						//Si todo es correcto envio los datos
 						if (estado != S_WELC ) {
@@ -335,7 +314,6 @@ int main(int *argc, char *argv[])
 							break;
 						case S_MAIL:
 							if (strcmp(line, ".") != 0) {
-								//sprintf_s(buffer_out, sizeof(buffer_out), "%s%s", mail, F_MENS);
 								estado = S_MAIL;
 							}
 							else {
@@ -366,7 +344,6 @@ int main(int *argc, char *argv[])
 							break;
 						case S_RSET:
 							if (strncmp(buffer_in, OK, 1) == 0) {
-								//printf("SERVIDOR> Bienvenido al servidor de correo\n");
 								estado = S_MAILFROM;
 							}
 							else {
@@ -376,8 +353,7 @@ int main(int *argc, char *argv[])
 							break;
 
 
-						}
-						//fin switch primero	
+						}	
 					} while (estado != S_QUIT);
 				}
 

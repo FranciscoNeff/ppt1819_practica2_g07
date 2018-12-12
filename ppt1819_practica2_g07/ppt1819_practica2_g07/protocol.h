@@ -15,7 +15,7 @@
 #define AS "SUBJECT:"
 #define F_DATA ".\r\n"
 #define VRFY "VRFY "
-#define MAIL "DATA "
+#define DATA "DATA "
 // RESPUESTAS A COMANDOS DE APLICACION
 
 #define OK "2"
