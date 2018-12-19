@@ -157,6 +157,7 @@ int main(int *argc, char *argv[])
 
 						}
 						else {
+							fflush(data);
 							strcat_s(data, sizeof(data), "From: ");
 							strcat_s(data, sizeof(data), input, sizeof(input));
 							strcat_s(data, sizeof(data), CRLF);//cabecera From:  en el data
